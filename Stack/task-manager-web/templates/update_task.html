@@ -1,0 +1,198 @@
+{% extends "layout.html" %}
+
+{% block title %}تحديث المهمة - نظام إدارة المهام{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil-square"></i>
+                    تحديث المهمة #{{ task.id }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_task', task_id=task.id) }}">
+                    <!-- معلومات المهمة الحالية -->
+                    <div class="alert alert-info mb-4">
+                        <h6>
+                            <i class="bi bi-info-circle"></i>
+                            معلومات المهمة الحالية
+                        </h6>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <small><strong>رقم المهمة:</strong> {{ task.id }}</small><br>
+                                <small><strong>تاريخ الإضافة:</strong> {{ task.created_at|fromisoformat|datetimeformat }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                {% if task.updated_at %}
+                                <small><strong>آخر تحديث:</strong> {{ task.updated_at|fromisoformat|datetimeformat }}</small><br>
+                                {% endif %}
+                                <small><strong>الحالة:</strong> 
+                                    <span class="badge bg-{{ 
+                                        'warning' if task.status == 'pending' 
+                                        else 'secondary' if task.status == 'in_progress' 
+                                        else 'success' 
+                                    }}">
+                                        {{ 
+                                            '⏳ قيد الانتظار' if task.status == 'pending' 
+                                            else '🔄 قيد التنفيذ' if task.status == 'in_progress' 
+                                            else '✅ مكتملة' 
+                                        }}
+                                    </span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- اسم المهمة -->
+                    <div class="mb-3">
+                        <label for="task_name" class="form-label">
+                            <i class="bi bi-card-heading"></i>
+                            اسم المهمة الجديد
+                        </label>
+                        <input type="text" class="form-control" id="task_name" 
+                               name="task_name" value="{{ task.task }}" 
+                               required maxlength="200">
+                        <div class="form-text">
+                            سيتم تحديث اسم المهمة في المكدس
+                        </div>
+                    </div>
+                    
+                    <!-- وصف المهمة -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-text-paragraph"></i>
+                            وصف المهمة
+                        </label>
+                        <textarea class="form-control" id="description" 
+                                  name="description" rows="4">{{ task.description or '' }}</textarea>
+                        <div class="form-text">
+                            يمكنك تعديل وصف المهمة أو إضافته
+                        </div>
+                    </div>
+                    
+                    <!-- معاينة التحديث -->
+                    <div class="mb-4">
+                        <h6>
+                            <i class="bi bi-eye"></i>
+                            معاينة التغييرات
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-secondary text-white">
+                                        <small>قبل التحديث</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6>{{ task.task }}</h6>
+                                        {% if task.description %}
+                                        <p class="small text-muted">{{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white">
+                                        <small>بعد التحديث</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6 id="afterTaskName">{{ task.task }}</h6>
+                                        <p class="small text-muted" id="afterDescription">
+                                            {{ task.description[:50] or 'لا يوجد وصف' }}{% if task.description and task.description|length > 50 %}...{% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- أزرار -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('view_tasks') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-right"></i> إلغاء والعودة
+                        </a>
+                        <div class="btn-group">
+                            <a href="{{ url_for('view_tasks') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle"></i>
+                                حفظ التغييرات
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- معلومات عن تحديث المهام في Stack -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightbulb"></i>
+                    ملاحظات مهمة عن تحديث المهام
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>في بنية Stack القياسية:</h6>
+                        <ul>
+                            <li>عملية Update ليست عملية أساسية في Stack</li>
+                            <li>في Stack حقيقي، العمليات الأساسية هي فقط Push و Pop</li>
+                            <li>للبحث وتحديث عنصر معين، يجب البحث يدوياً في المكدس</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>في هذا التطبيق:</h6>
+                        <ul>
+                            <li>تم إضافة دالة Update لأغراض الإدارة</li>
+                            <li>يتم البحث عن المهمة بالرقم (O(n) تعقيد)</li>
+                            <li>التحديث لا يغير موقع المهمة في المكدس</li>
+                            <li>يتم تسجيل وقت التحديث</li>
+                        </ul>
+                        <div class="alert alert-info mt-2">
+                            <small>
+                                <i class="bi bi-info-circle"></i>
+                                المهمة تحافظ على موقعها في المكدس، فقط المحتوى يتغير
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // معاينة التحديث في الوقت الحقيقي
+    $('#task_name').on('input', function() {
+        const newName = $(this).val();
+        $('#afterTaskName').text(newName || '[بدون اسم]');
+    });
+    
+    $('#description').on('input', function() {
+        const newDesc = $(this).val();
+        const preview = newDesc ? 
+            (newDesc.length > 50 ? newDesc.substring(0, 50) + '...' : newDesc) : 
+            'لا يوجد وصف';
+        $('#afterDescription').text(preview);
+    });
+    
+    // التأكيد قبل التحديث
+    $('form').submit(function() {
+        const newName = $('#task_name').val();
+        if (!newName.trim()) {
+            alert('يرجى إدخال اسم للمهمة');
+            return false;
+        }
+        
+        return confirm(`هل تريد حفظ التغييرات على المهمة #{{ task.id }}؟`);
+    });
+</script>
+{% endblock %}

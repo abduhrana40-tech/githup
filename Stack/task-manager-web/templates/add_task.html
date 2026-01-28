@@ -1,0 +1,166 @@
+{% extends "layout.html" %}
+
+{% block title %}إضافة مهمة جديدة - نظام إدارة المهام{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle"></i>
+                    إضافة مهمة جديدة (Push)
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_task') }}">
+                    <!-- اختيار Stack -->
+                    <div class="mb-3">
+                        <label for="stack_id" class="form-label">
+                            <i class="bi bi-stack"></i>
+                            اختر المكدس
+                        </label>
+                        <select class="form-select" id="stack_id" name="stack_id" required>
+                            {% for stack in all_stacks %}
+                            <option value="{{ stack.id }}" 
+                                    {% if stack.id == session.get('current_stack', 'default') %}selected{% endif %}>
+                                {{ stack.name }} ({{ stack.task_count }} مهام)
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            المهمة ستضاف إلى <strong>أعلى</strong> المكدس المختار
+                        </div>
+                    </div>
+                    
+                    <!-- اسم المهمة -->
+                    <div class="mb-3">
+                        <label for="task_name" class="form-label">
+                            <i class="bi bi-card-heading"></i>
+                            اسم المهمة
+                        </label>
+                        <input type="text" class="form-control" id="task_name" 
+                               name="task_name" placeholder="أدخل اسم المهمة" 
+                               required maxlength="200">
+                        <div class="form-text">
+                            سيتم عرض هذا الاسم في قائمة المهام
+                        </div>
+                    </div>
+                    
+                    <!-- وصف المهمة -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-text-paragraph"></i>
+                            وصف المهمة (اختياري)
+                        </label>
+                        <textarea class="form-control" id="description" 
+                                  name="description" rows="4" 
+                                  placeholder="أدخل وصفاً مفصلاً للمهمة..."></textarea>
+                        <div class="form-text">
+                            يمكنك إضافة تفاصيل إضافية عن المهمة
+                        </div>
+                    </div>
+                    
+                    <!-- معاينة المكدس -->
+                    <div class="mb-4">
+                        <h6>
+                            <i class="bi bi-eye"></i>
+                            معاينة المكدس بعد الإضافة
+                        </h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="stack-preview">
+                                    <div class="stack-item-visual stack-top">
+                                        <div class="stack-item-content">
+                                            <div class="stack-item-id">جديد</div>
+                                            <div class="stack-item-text" id="taskPreview">
+                                                [اسم المهمة الجديدة]
+                                            </div>
+                                            <div class="stack-item-status">
+                                                <span class="badge bg-warning">⏳</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">ستظهر هذه المهمة في أعلى المكدس</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- أزرار -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('view_tasks') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-right"></i> العودة للقائمة
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i>
+                            إضافة المهمة (Push)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- معلومات عن عملية Push -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    معلومات عن عملية Push
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>كيف تعمل عملية Push؟</h6>
+                        <ol>
+                            <li>المهمة الجديدة تضاف إلى <strong>أعلى</strong> المكدس</li>
+                            <li>تصبح المهمة الجديدة أول مهمة ستظهر في العرض</li>
+                            <li>ستكون أول مهمة يتم حذفها عند استخدام Pop</li>
+                            <li>يتم زيادة عداد العمليات بمقدار 1</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>مثال عملي:</h6>
+                        <pre class="bg-light p-3 rounded">
+المكدس قبل: [المهمة أ, المهمة ب]
+Push(المهمة ج)
+المكدس بعد: [المهمة أ, المهمة ب, <strong>المهمة ج</strong>]
+                        </pre>
+                        <p class="text-muted">
+                            <i class="bi bi-lightbulb"></i>
+                            تذكر: آخر مهمة مضافة = أول مهمة تحذف (LIFO)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // معاينة اسم المهمة
+    $('#task_name').on('input', function() {
+        const taskName = $(this).val();
+        if (taskName) {
+            $('#taskPreview').text(taskName.length > 30 ? taskName.substring(0, 30) + '...' : taskName);
+        } else {
+            $('#taskPreview').text('[اسم المهمة الجديدة]');
+        }
+    });
+    
+    // التأكيد قبل الإرسال
+    $('form').submit(function() {
+        const taskName = $('#task_name').val();
+        if (!taskName.trim()) {
+            alert('يرجى إدخال اسم المهمة');
+            return false;
+        }
+        
+        const stackName = $('#stack_id option:selected').text();
+        return confirm(`هل تريد إضافة المهمة "${taskName}" إلى أعلى المكدس "${stackName}"؟`);
+    });
+</script>
+{% endblock %}

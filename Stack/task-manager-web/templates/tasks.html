@@ -1,0 +1,405 @@
+{% extends "layout.html" %}
+
+{% block title %}عرض المهام - نظام إدارة المهام{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-list-task text-primary"></i>
+        قائمة المهام - {{ current_stack }}
+    </h2>
+    
+    <div class="btn-group">
+        <a href="{{ url_for('add_task') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> إضافة مهمة
+        </a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#popModal">
+            <i class="bi bi-arrow-down-circle"></i> حذف من الأعلى (Pop)
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- إحصائيات -->
+    <div class="col-lg-3 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    إحصائيات المكدس
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="stats-list">
+                    <div class="stat-item d-flex justify-content-between mb-2">
+                        <span>إجمالي المهام:</span>
+                        <span class="badge bg-primary">{{ stats.total_tasks }}</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between mb-2">
+                        <span>قيد الانتظار:</span>
+                        <span class="badge bg-warning">{{ stats.pending_tasks }}</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between mb-2">
+                        <span>قيد التنفيذ:</span>
+                        <span class="badge bg-secondary">{{ stats.in_progress_tasks }}</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between mb-2">
+                        <span>مكتملة:</span>
+                        <span class="badge bg-success">{{ stats.completed_tasks }}</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between mb-2">
+                        <span>العمليات:</span>
+                        <span class="badge bg-dark">{{ stats.total_operations }}</span>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- تفريغ المكدس -->
+                <form method="POST" action="{{ url_for('clear_stack') }}" 
+                      onsubmit="return confirm('هل أنت متأكد من تفريغ المكدس بالكامل؟');">
+                    <input type="hidden" name="stack_id" value="{{ current_stack }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                        <i class="bi bi-trash"></i> تفريغ المكدس
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- اختيار Stack -->
+        <div class="card shadow mt-3">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-stack"></i>
+                    الأكوام المتاحة
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for stack in all_stacks %}
+                    <a href="{{ url_for('view_tasks', stack=stack.id) }}" 
+                       class="list-group-item list-group-item-action {% if stack.id == current_stack %}active{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ stack.name }}</h6>
+                            <span class="badge bg-primary rounded-pill">{{ stack.task_count }}</span>
+                        </div>
+                        <small>تم الإنشاء: {{ stack.created_at|fromisoformat|datetimeformat }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- جدول المهام -->
+    <div class="col-lg-9">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-stack"></i>
+                    المهام مرتبة من الأعلى إلى الأسفل (LIFO)
+                </h6>
+                <span class="badge bg-light text-dark">
+                    <i class="bi bi-info-circle"></i>
+                    آخر مهمة مضافة تظهر أولاً
+                </span>
+            </div>
+            
+            <div class="card-body">
+                {% if tasks %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50">#</th>
+                                    <th>المهمة</th>
+                                    <th width="120">الحالة</th>
+                                    <th width="150">التاريخ</th>
+                                    <th width="200">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                <tr {% if loop.first %}class="table-danger"{% endif %}>
+                                    <td>
+                                        <span class="badge {% if loop.first %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ task.id }}
+                                            {% if loop.first %}
+                                            <i class="bi bi-arrow-up"></i>
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ task.task }}</strong>
+                                        {% if task.description %}
+                                        <br>
+                                        <small class="text-muted">{{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('update_status', task_id=task.id) }}" 
+                                              class="status-form" id="statusForm{{ task.id }}">
+                                            <select name="status" class="form-select form-select-sm status-select" 
+                                                    data-task-id="{{ task.id }}">
+                                                <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>
+                                                    ⏳ قيد الانتظار
+                                                </option>
+                                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>
+                                                    🔄 قيد التنفيذ
+                                                </option>
+                                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>
+                                                    ✅ مكتملة
+                                                </option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <small>{{ task.created_at|fromisoformat|datetimeformat }}</small>
+                                        {% if task.updated_at %}
+                                        <br>
+                                        <small class="text-muted">تحديث: {{ task.updated_at|fromisoformat|datetimeformat }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('update_task', task_id=task.id) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="bi bi-pencil"></i> تعديل
+                                            </a>
+                                            
+                                            {% if not loop.first %}
+                                            <button type="button" class="btn btn-outline-danger delete-specific-btn" 
+                                                    data-task-id="{{ task.id }}"
+                                                    data-task-name="{{ task.task }}">
+                                                <i class="bi bi-trash"></i> حذف
+                                            </button>
+                                            {% else %}
+                                            <button type="button" class="btn btn-danger" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#popModal">
+                                                <i class="bi bi-arrow-down-circle"></i> Pop
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- تمثيل مرئي للمكدس -->
+                    <div class="mt-4">
+                        <h6 class="border-bottom pb-2">
+                            <i class="bi bi-diagram-3"></i>
+                            تمثيل مرئي للمكدس (Stack Visualization)
+                        </h6>
+                        <div class="stack-visualization-container">
+                            <div class="stack-visualization">
+                                <div class="stack-top-label">
+                                    <i class="bi bi-arrow-up-circle-fill text-danger"></i>
+                                    الأعلى (سيتم حذفه أولاً)
+                                </div>
+                                
+                                {% for task in tasks %}
+                                <div class="stack-item-visual {% if loop.first %}stack-top{% endif %}">
+                                    <div class="stack-item-content">
+                                        <div class="stack-item-id">#{{ task.id }}</div>
+                                        <div class="stack-item-text">{{ task.task[:30] }}{% if task.task|length > 30 %}...{% endif %}</div>
+                                        <div class="stack-item-status">
+                                            <span class="badge bg-{{ 
+                                                'warning' if task.status == 'pending' 
+                                                else 'secondary' if task.status == 'in_progress' 
+                                                else 'success' 
+                                            }}">
+                                                {{ 
+                                                    '⏳' if task.status == 'pending' 
+                                                    else '🔄' if task.status == 'in_progress' 
+                                                    else '✅' 
+                                                }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                                <div class="stack-bottom-label">
+                                    <i class="bi bi-arrow-down-circle-fill text-success"></i>
+                                    الأسفل (تمت إضافته أولاً)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox fs-1 text-muted"></i>
+                        <h4 class="text-muted mt-3">المكدس فارغ</h4>
+                        <p class="text-muted">لا توجد مهام في الوقت الحالي. قم بإضافة مهمة جديدة.</p>
+                        <a href="{{ url_for('add_task') }}" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> إضافة أول مهمة
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            تظهر المهام من الأعلى إلى الأسفل حسب مبدأ LIFO
+                        </small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <small class="text-muted">
+                            إجمالي المهام: <strong>{{ stats.total_tasks }}</strong> |
+                            العمليات: <strong>{{ stats.total_operations }}</strong>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة حذف من الأعلى (Pop) -->
+<div class="modal fade" id="popModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-arrow-down-circle"></i>
+                    حذف المهمة من الأعلى (Pop)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('delete_task') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="stack_id" value="{{ current_stack }}">
+                    
+                    <div class="alert alert-danger">
+                        <h6>
+                            <i class="bi bi-exclamation-triangle"></i>
+                            تحذير: هذه عملية Pop
+                        </h6>
+                        <p class="mb-0">
+                            سيتم حذف المهمة من <strong>أعلى</strong> المكدس حسب مبدأ LIFO.
+                            هذه العملية لا يمكن التراجع عنها.
+                        </p>
+                    </div>
+                    
+                    {% if tasks and tasks|length > 0 %}
+                        {% set top_task = tasks[0] %}
+                        <div class="card">
+                            <div class="card-header bg-warning">
+                                المهمة التي سيتم حذفها:
+                            </div>
+                            <div class="card-body">
+                                <h6>{{ top_task.task }}</h6>
+                                <p class="mb-1">
+                                    <small>
+                                        <i class="bi bi-calendar"></i>
+                                        أضيفت في: {{ top_task.created_at|fromisoformat|datetimeformat }}
+                                    </small>
+                                </p>
+                                {% if top_task.description %}
+                                <p class="mb-0">
+                                    <small>{{ top_task.description[:100] }}{% if top_task.description|length > 100 %}...{% endif %}</small>
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            المكدس فارغ، لا توجد مهام للحذف
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    {% if tasks and tasks|length > 0 %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-arrow-down-circle"></i>
+                        تأكيد الحذف (Pop)
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة حذف مهمة محددة -->
+<div class="modal fade" id="deleteSpecificModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    حذف مهمة محددة
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="" id="deleteSpecificForm">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <h6>
+                            <i class="bi bi-info-circle"></i>
+                            ملاحظة مهمة
+                        </h6>
+                        <p class="mb-0">
+                            في بنية Stack القياسية، لا يمكن حذف إلا من الأعلى (Pop).
+                            هذه العملية هي لأغراض الإدارة فقط وليست عملية Stack قياسية.
+                        </p>
+                    </div>
+                    
+                    <p>هل أنت متأكد من حذف المهمة: <strong id="taskToDeleteName"></strong>؟</p>
+                    <input type="hidden" name="task_id" id="taskToDeleteId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i>
+                        تأكيد الحذف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // تحديث حالة المهمة عند التغيير
+    $('.status-select').change(function() {
+        const taskId = $(this).data('task-id');
+        const status = $(this).val();
+        
+        // إرسال النموذج
+        $('#statusForm' + taskId).submit();
+    });
+    
+    // حذف مهمة محددة
+    $('.delete-specific-btn').click(function() {
+        const taskId = $(this).data('task-id');
+        const taskName = $(this).data('task-name');
+        
+        $('#taskToDeleteId').val(taskId);
+        $('#taskToDeleteName').text(taskName);
+        
+        // تحديث رابط النموذج
+        $('#deleteSpecificForm').attr('action', '/delete-specific-task/' + taskId);
+        
+        // عرض النافذة
+        $('#deleteSpecificModal').modal('show');
+    });
+    
+    // عرض رسالة تعليمية للحذف من الأعلى
+    $('#popModal').on('show.bs.modal', function() {
+        console.log('عملية Pop: حذف من أعلى المكدس');
+    });
+</script>
+{% endblock %}

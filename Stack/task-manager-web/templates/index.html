@@ -1,0 +1,269 @@
+{% extends "layout.html" %}
+
+{% block title %}الرئيسية - نظام إدارة المهام{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- بطاقة الترحيب -->
+    <div class="col-12">
+        <div class="card border-primary shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-stack"></i>
+                    مرحباً بك في نظام إدارة المهام
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="card-title">نظام يعمل بمبدأ Stack (LIFO)</h5>
+                        <p class="card-text">
+                            هذا النظام يطبق بنية البيانات Stack حيث:
+                        </p>
+                        <ul>
+                            <li>يتم إضافة المهام إلى <strong>أعلى</strong> المكدس (Push)</li>
+                            <li>يتم حذف المهام من <strong>أعلى</strong> المكدس (Pop)</li>
+                            <li>آخر مهمة تمت إضافتها هي أول مهمة يتم حذفها (LIFO)</li>
+                            <li>يمكنك إنشاء أكوام متعددة للمهام المختلفة</li>
+                        </ul>
+                        <div class="mt-4">
+                            <a href="{{ url_for('add_task') }}" class="btn btn-success me-2">
+                                <i class="bi bi-plus-circle"></i> إضافة مهمة جديدة
+                            </a>
+                            <a href="{{ url_for('view_tasks') }}" class="btn btn-primary">
+                                <i class="bi bi-list-task"></i> عرض جميع المهام
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="stack-visualization">
+                            <div class="stack-container">
+                                <div class="stack-top">TOP</div>
+                                {% for task in recent_tasks %}
+                                <div class="stack-item {% if loop.first %}active{% endif %}">
+                                    <small>{{ task.task[:20] }}{% if task.task|length > 20 %}...{% endif %}</small>
+                                </div>
+                                {% endfor %}
+                                <div class="stack-bottom">BOTTOM</div>
+                            </div>
+                            <p class="text-muted mt-2">تصور مبسط للمكدس</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- إحصائيات سريعة -->
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3 shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">إجمالي المهام</h6>
+                        <h2 class="mb-0" id="stackSize">{{ stats.total_tasks }}</h2>
+                    </div>
+                    <i class="bi bi-list-check fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3 shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">قيد الانتظار</h6>
+                        <h2 class="mb-0">{{ stats.pending_tasks }}</h2>
+                    </div>
+                    <i class="bi bi-clock fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary mb-3 shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">قيد التنفيذ</h6>
+                        <h2 class="mb-0">{{ stats.in_progress_tasks }}</h2>
+                    </div>
+                    <i class="bi bi-gear fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3 shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">مكتملة</h6>
+                        <h2 class="mb-0">{{ stats.completed_tasks }}</h2>
+                    </div>
+                    <i class="bi bi-check-circle fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- المهمة العلوية الحالية -->
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-arrow-up-circle"></i>
+                    المهمة العلوية (سيتم حذفها أولاً)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_tasks and recent_tasks|length > 0 %}
+                    {% set top_task = recent_tasks[0] %}
+                    <div class="alert alert-danger">
+                        <h6>المهمة الحالية في الأعلى:</h6>
+                        <h4 id="topTask">{{ top_task.task }}</h4>
+                        <p class="mb-0">
+                            <small>
+                                <i class="bi bi-calendar"></i>
+                                أضيفت في: {{ top_task.created_at|fromisoformat|datetimeformat }}
+                            </small>
+                        </p>
+                    </div>
+                    <p class="text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        هذه المهمة ستكون أول مهمة يتم حذفها عند استخدام عملية Pop
+                    </p>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        لا توجد مهام في المكدس حالياً
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- إنشاء Stack جديد -->
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-plus-square"></i>
+                    إدارة الأكوام (Stacks)
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>إنشاء كوم جديد</h6>
+                <form method="POST" action="{{ url_for('create_stack') }}" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="stack_name" 
+                               placeholder="اسم الكوم الجديد" required>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-plus-lg"></i> إنشاء
+                        </button>
+                    </div>
+                    <small class="text-muted">يمكنك إنشاء أكوام متعددة للمهام المختلفة</small>
+                </form>
+                
+                <h6 class="mt-3">الأكوام الحالية</h6>
+                <div class="list-group">
+                    {% for stack in TaskStack.get_all_stacks() %}
+                    <a href="{{ url_for('view_tasks', stack=stack.id) }}" 
+                       class="list-group-item list-group-item-action {% if stack.id == current_stack %}active{% endif %}">
+                        <div class="d-flex w-100justify-content-between">
+                            <h6 class="mb-1">{{ stack.name }}</h6>
+                            <span class="badge bg-primary rounded-pill">{{ stack.task_count }}</span>
+                        </div>
+                        <small>تم الإنشاء: {{ stack.created_at|fromisoformat|datetimeformat }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- شرح مبسط للعمليات -->
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightbulb"></i>
+                    كيف يعمل نظام Stack؟
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="operation-card push-operation">
+                            <i class="bi bi-arrow-up-circle fs-1 text-success"></i>
+                            <h6 class="mt-2">Push</h6>
+                            <p class="small">إضافة مهمة جديدة إلى الأعلى</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="operation-card pop-operation">
+                            <i class="bi bi-arrow-down-circle fs-1 text-danger"></i>
+                            <h6 class="mt-2">Pop</h6>
+                            <p class="small">حذف المهمة من الأعلى</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="operation-card peek-operation">
+                            <i class="bi bi-eye fs-1 text-info"></i>
+                            <h6 class="mt-2">Peek</h6>
+                            <p class="small">عرض المهمة العلوية</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="operation-card lifo-operation">
+                            <i class="bi bi-sort-down fs-1 text-warning"></i>
+                            <h6 class="mt-2">LIFO</h6>
+                            <p class="small">آخر يدخل أول يخرج</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6>مثال عملي:</h6>
+                <ol>
+                    <li>Push: إضافة "المهمة أ" ← Stack: [أ]</li>
+                    <li>Push: إضافة "المهمة ب" ← Stack: [أ, ب] (ب في الأعلى)</li>
+                    <li>Push: إضافة "المهمة ج" ← Stack: [أ, ب, ج] (ج في الأعلى)</li>
+                    <li>Pop: حذف من الأعلى ← تخرج "المهمة ج" ← Stack: [أ, ب]</li>
+                    <li>Pop: حذف من الأعلى ← تخرج "المهمة ب" ← Stack: [أ]</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // تحديث ديناميكي للإحصائيات
+    function updateStats() {
+        $.get('{{ url_for("api_stats") }}', function(data) {
+            if (data.success) {
+                $('#stackSize').text(data.stats.total_tasks);
+                if (data.top_task) {
+                    $('#topTask').text(data.top_task.task);
+                }
+            }
+        });
+    }
+    
+    // تحديث كل 10 ثواني
+    setInterval(updateStats, 10000);
+</script>
+{% endblock %}

@@ -1,0 +1,444 @@
+:root {
+    --primary-color: #2C3E50;
+    --secondary-color: #3498DB;
+    --success-color: #27AE60;
+    --danger-color: #E74C3C;
+    --warning-color: #F39C12;
+    --info-color: #17A2B8;
+    --light-color: #ECF0F1;
+    --dark-color: #2C3E50;
+    --border-radius: 8px;
+}
+
+/* تخصيص عام */
+* {
+    font-family: 'Cairo', sans-serif;
+}
+
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* السمة الداكنة */
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+body.dark-mode .card {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+body.dark-mode .table {
+    color: #e0e0e0;
+}
+
+body.dark-mode .table-hover tbody tr:hover {
+    background-color: #2d2d2d;
+}
+
+/* تصور المكدس */
+.stack-visualization {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stack-container {
+    width: 200px;
+    border: 2px solid var(--secondary-color);
+    border-radius: var(--border-radius);
+    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.dark-mode .stack-container {
+    background: linear-gradient(145deg, #2d2d2d, #1e1e1e);
+}
+
+.stack-top {
+    background-color: var(--danger-color);
+    color: white;
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+    border-radius: 5px 5px 0 0;
+}
+
+.stack-bottom {
+    background-color: var(--success-color);
+    color: white;
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+    border-radius: 0 0 5px 5px;
+}
+
+.stack-item {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.dark-mode .stack-item {
+    border-bottom: 1px solid #444;
+}
+
+.stack-item.active {
+    background-color: var(--danger-color);
+    color: white;
+    font-weight: bold;
+}
+
+.stack-item:hover {
+    background-color: var(--info-color);
+    color: white;
+    transform: scale(1.02);
+}
+
+/* تمثيل المكدس المرئي */
+.stack-visualization-container {
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--border-radius);
+}
+
+.stack-visualization {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.stack-item-visual {
+    background: white;
+    margin: 5px 0;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+    position: relative;
+}
+
+.dark-mode .stack-item-visual {
+    background: #2d2d2d;
+}
+
+.stack-item-visual.stack-top {
+    background: linear-gradient(135deg, var(--danger-color), #ff6b6b);
+    color: white;
+    transform: scale(1.05);
+    z-index: 10;
+    border-left: 5px solid #ff3333;
+}
+
+.stack-item-visual:hover {
+    transform: translateX(-5px);
+}
+
+.stack-item-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stack-item-id {
+    background: var(--dark-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    min-width: 50px;
+    text-align: center;
+}
+
+.stack-item-text {
+    flex: 1;
+    margin: 0 15px;
+    font-weight: 500;
+}
+
+.stack-item-status .badge {
+    font-size: 0.9em;
+    padding: 5px 10px;
+}
+
+.stack-top-label,
+.stack-bottom-label {
+    text-align: center;
+    padding: 10px;
+    color: white;
+    font-weight: bold;
+    margin: 5px 0;
+    border-radius: var(--border-radius);
+}
+
+.stack-top-label {
+    background: var(--danger-color);
+}
+
+.stack-bottom-label {
+    background: var(--success-color);
+}
+
+/* بطاقات العمليات */
+.operation-card {
+    background: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+    border-top: 4px solid transparent;
+    height: 100%;
+}
+
+.dark-mode .operation-card {
+    background: #2d2d2d;
+}
+
+.operation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.push-operation {
+    border-top-color: var(--success-color);
+}
+
+.pop-operation {
+    border-top-color: var(--danger-color);
+}
+
+.peek-operation {
+    border-top-color: var(--info-color);
+}
+
+.lifo-operation {
+    border-top-color: var(--warning-color);
+}
+
+/* تأثيرات للجداول */
+.table-hover tbody tr {
+    transition: all 0.3s;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* إحصائيات */
+.stat-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.dark-mode .stat-item {
+    border-bottom: 1px solid #444;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+/* أزرار خاصة */
+.btn-stack {
+    background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.btn-stack:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    color: white;
+}
+
+/* رسوم متحركة */
+@keyframes pushAnimation {
+    0% { transform: translateY(-50px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes popAnimation {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-50px); opacity: 0; }
+}
+
+.stack-push {
+    animation: pushAnimation 0.5s ease-out;
+}
+
+.stack-pop {
+    animation: popAnimation 0.5s ease-out;
+}
+
+/* تصميم متجاوب */
+@media (max-width: 768px) {
+    .stack-visualization-container {
+        padding: 10px;
+    }
+    
+    .stack-item-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .stack-item-text {
+        margin: 10px 0;
+    }
+    
+    .operation-card {
+        margin-bottom: 15px;
+    }
+}
+
+/* شريط التقدم */
+.progress {
+    height: 25px;
+    border-radius: var(--border-radius);
+    margin: 10px 0;
+}
+
+.progress-bar {
+    border-radius: var(--border-radius);
+}
+
+/* تخصيص التنبيهات */
+.alert {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* تأثيرات Hover للبطاقات */
+.card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* تخصيص القوائم */
+.list-group-item {
+    border: none;
+    margin-bottom: 5px;
+    border-radius: var(--border-radius) !important;
+    transition: all 0.3s;
+}
+
+.list-group-item:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+    transform: translateX(-5px);
+}
+
+/* تخصيص النماذج */
+.form-control, .form-select {
+    border-radius: var(--border-radius);
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+
+/* تخصيص الشريط العلوي */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 15px 0;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* تخصيص التذييل */
+footer {
+    margin-top: auto;
+}
+
+/* تأثيرات للرموز */
+.bi {
+    vertical-align: middle;
+}
+
+/* تخصيص الباجات */
+.badge {
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-weight: 500;
+}
+
+/* تخصيص التبويبات */
+.nav-tabs .nav-link {
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    border: none;
+    padding: 12px 20px;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* تخصيص النوافذ المنبثقة */
+.modal-content {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+/* تأثيرات التحميل */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* رسالة فارغة */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.empty-state .bi {
+    font-size: 4rem;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.dark-mode .empty-state .bi {
+    color: #444;
+}
